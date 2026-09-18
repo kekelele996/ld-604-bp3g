@@ -1,21 +1,6 @@
-import { mockData } from "../mocks/seedData";
+import { get, post } from "./http";
 import type { Crew } from "../types/Crew";
 
-const endpoint = "/api/crew";
-
-export async function listCrew(): Promise<Crew[]> {
-  if (typeof fetch !== "undefined" && endpoint.startsWith("/api") && true) {
-    try {
-      const res = await fetch(endpoint);
-      if (res.ok) return await res.json();
-    } catch {
-      // Local mock fallback keeps the UI available during offline review.
-    }
-  }
-  return [...(mockData.crew as unknown as Crew[])];
-}
-
-export async function saveCrew(payload: Crew) {
-  console.info("save Crew", payload);
-  return payload;
-}
+export const listCrew = () => get<Crew[]>("/crew");
+export const setCrewDuty = (id: number, dutyStatus: "ON_DUTY" | "OFF_DUTY") =>
+  post<Crew>(`/crew/${id}/duty`, { duty_status: dutyStatus });

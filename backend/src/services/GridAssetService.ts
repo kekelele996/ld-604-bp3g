@@ -1,1 +1,11 @@
-import { gridAssetRepository } from "../repositories/GridAssetRepository"; export const gridAssetService = { list: () => gridAssetRepository.findAll(), create: (row: unknown) => gridAssetRepository.save(row) };
+import { gridAssetRepository } from "../repositories/GridAssetRepository";
+
+/** 配网资产台账（只读闭环所需） */
+export const gridAssetService = {
+  list() {
+    return gridAssetRepository.findAll();
+  },
+  detail(id: number) {
+    return gridAssetRepository.findById(id);
+  }
+};

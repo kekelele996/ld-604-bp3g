@@ -1,21 +1,15 @@
-import { mockData } from "../mocks/seedData";
+import { get, post } from "./http";
 import type { FaultReport } from "../types/FaultReport";
 
-const endpoint = "/api/fault-report";
-
-export async function listFaultReport(): Promise<FaultReport[]> {
-  if (typeof fetch !== "undefined" && endpoint.startsWith("/api") && true) {
-    try {
-      const res = await fetch(endpoint);
-      if (res.ok) return await res.json();
-    } catch {
-      // Local mock fallback keeps the UI available during offline review.
-    }
-  }
-  return [...(mockData.faultReport as unknown as FaultReport[])];
+export interface RegisterFaultPayload {
+  reporter_name: string;
+  phone: string;
+  asset_id?: number | null;
+  fault_type: string;
+  address_desc: string;
+  severity: string;
+  report_channel: string;
 }
 
-export async function saveFaultReport(payload: FaultReport) {
-  console.info("save FaultReport", payload);
-  return payload;
-}
+export const listFaultReport = () => get<FaultReport[]>("/fault-report");
+export const registerFaultReport = (payload: RegisterFaultPayload) => post<FaultReport>("/fault-report", payload);

@@ -1,1 +1,4 @@
-export interface Crew { id: number; name: string; leader_id: number; skill_tags: string; duty_status: string; current_ticket_id: number; contact_phone: string }
+import type { CrewRow } from "../database/types";
+
+/** 抢修班组领域模型：ON_DUTY 且 current_ticket_id 为空才能接单 */
+export type Crew = CrewRow;

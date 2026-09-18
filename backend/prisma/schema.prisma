@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// 配网资产台账
+model GridAsset {
+  id           Int           @id @default(autoincrement())
+  assetCode    String        @unique @map("asset_code") @db.VarChar(64)
+  assetType    String        @map("asset_type") @db.VarChar(32)
+  feederLine   String        @map("feeder_line") @db.VarChar(64)
+  voltageLevel String        @map("voltage_level") @db.VarChar(16)
+  locationDesc String        @map("location_desc") @db.VarChar(255)
+  healthStatus String        @map("health_status") @db.VarChar(32)
+  ownerTeamId  Int?          @map("owner_team_id")
+  faultReports FaultReport[]
+
+  @@map("grid_asset")
+}
+
+/// 故障报修单
+model FaultReport {
+  id            Int           @id @default(autoincrement())
+  reporterName  String        @map("reporter_name") @db.VarChar(64)
+  phone         String        @db.VarChar(32)
+  assetId       Int?          @map("asset_id")
+  asset         GridAsset?    @relation(fields: [assetId], references: [id])
+  faultType     String        @map("fault_type") @db.VarChar(32)
+  addressDesc   String        @map("address_desc") @db.VarChar(255)
+  /// 故障严重度：CRITICAL / MAJOR / MINOR
+  severity      String        @db.VarChar(16)
+  reportChannel String        @map("report_channel") @db.VarChar(32)
+  /// RECEIVED / MERGED / CONVERTED
+  status        String        @default("RECEIVED") @db.VarChar(32)
+  ticket        RepairTicket?
+
+  @@index([assetId])
+  @@map("fault_report")
+}
+
+/// 抢修工单：状态只允许 WAIT_DISPATCH→ASSIGNED→ARRIVED→REPAIRING→RESTORED→CLOSED
+model RepairTicket {
+  id            Int              @id @default(autoincrement())
+  faultReportId Int              @unique @map("fault_report_id")
+  faultReport   FaultReport      @relation(fields: [faultReportId], references: [id])
+  teamId        Int?             @map("team_id")
+  dispatcherId  Int?             @map("dispatcher_id")
+  /// 派工时按故障严重度落值：CRITICAL / MAJOR / MINOR
+  priority      String?          @db.VarChar(16)
+  status        String           @default("WAIT_DISPATCH") @db.VarChar(32)
+  assignedAt    DateTime?        @map("assigned_at") @db.DateTime(3)
+  arrivedAt     DateTime?        @map("arrived_at") @db.DateTime(3)
+  repairingAt   DateTime?        @map("repairing_at") @db.DateTime(3)
+  restoredAt    DateTime?        @map("restored_at") @db.DateTime(3)
+  closedAt      DateTime?        @map("closed_at") @db.DateTime(3)
+  team          Crew?            @relation("CrewTickets", fields: [teamId], references: [id])
+  usages        SparePartUsage[]
+  logs          TicketEventLog[]
+
+  @@index([status])
+  @@index([teamId])
+  @@map("repair_ticket")
+}
+
+/// 抢修班组：duty_status=ON_DUTY 且 current_ticket_id 为空才能接单
+model Crew {
+  id              Int            @id @default(autoincrement())
+  name            String         @db.VarChar(64)
+  leaderId        Int            @map("leader_id")
+  /// 逗号分隔技能标签，如 "HOT_LINE,CABLE"
+  skillTags       String         @map("skill_tags") @db.VarChar(255)
+  /// ON_DUTY / OFF_DUTY
+  dutyStatus      String         @default("ON_DUTY") @map("duty_status") @db.VarChar(16)
+  currentTicketId Int?           @unique @map("current_ticket_id")
+  contactPhone    String         @map("contact_phone") @db.VarChar(32)
+  tickets         RepairTicket[] @relation("CrewTickets")
+
+  @@index([dutyStatus])
+  @@map("crew")
+}
+
+/// 备件库存
+model SparePart {
+  id            Int    @id @default(autoincrement())
+  partCode      String @unique @map("part_code") @db.VarChar(64)
+  partName      String @map("part_name") @db.VarChar(128)
+  warehouseName String @map("warehouse_name") @db.VarChar(64)
+  stockQuantity Int    @default(0) @map("stock_quantity")
+
+  @@map("spare_part")
+}
+
+/// 备件领用记录：PENDING 待审批 / APPROVED 已批准 / REJECTED 已驳回 / CONSUMED 已消耗 / RETURNED 已归还
+model SparePartUsage {
+  id            Int          @id @default(autoincrement())
+  ticketId      Int          @map("ticket_id")
+  ticket        RepairTicket @relation(fields: [ticketId], references: [id])
+  partCode      String       @map("part_code") @db.VarChar(64)
+  partName      String       @map("part_name") @db.VarChar(128)
+  quantity      Int
+  warehouseName String       @map("warehouse_name") @db.VarChar(64)
+  usageStatus   String       @default("PENDING") @map("usage_status") @db.VarChar(16)
+  approvedBy    Int?         @map("approved_by")
+  approvedAt    DateTime?    @map("approved_at") @db.DateTime(3)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([ticketId])
+  @@index([usageStatus])
+  @@map("spare_part_usage")
+}
+
+/// 库存流水：每一次扣减/回补都落一条，重启后与库存余额一致
+model InventoryTransaction {
+  id           Int      @id @default(autoincrement())
+  partCode     String   @map("part_code") @db.VarChar(64)
+  /// RESERVE 派工预留扣减 / REJECT_RETURN 驳回回补 / CONSUME 消耗 / MANUAL_ADJUST 手工调整
+  changeType   String   @map("change_type") @db.VarChar(32)
+  quantity     Int
+  balanceAfter Int      @map("balance_after")
+  ticketId     Int?     @map("ticket_id")
+  usageId      Int?     @map("usage_id")
+  operatorId   Int?     @map("operator_id")
+  remark       String?  @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([partCode])
+  @@index([ticketId])
+  @@map("inventory_transaction")
+}
+
+/// 工单状态事件（时间线）
+model TicketEventLog {
+  id         Int          @id @default(autoincrement())
+  ticketId   Int          @map("ticket_id")
+  ticket     RepairTicket @relation(fields: [ticketId], references: [id])
+  fromStatus String?      @map("from_status") @db.VarChar(32)
+  toStatus   String       @map("to_status") @db.VarChar(32)
+  operatorId Int?         @map("operator_id")
+  remark     String?      @db.VarChar(255)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([ticketId])
+  @@map("ticket_event_log")
+}
+
+/// 审计日志
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actor      String   @db.VarChar(64)
+  action     String   @db.VarChar(64)
+  targetType String   @map("target_type") @db.VarChar(32)
+  targetId   String?  @map("target_id") @db.VarChar(64)
+  detail     String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@map("audit_log")
+}

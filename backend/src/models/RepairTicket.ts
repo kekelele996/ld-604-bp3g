@@ -1,1 +1,4 @@
-export interface RepairTicket { id: number; fault_report_id: number; team_id: number; dispatcher_id: number; priority: string; status: string; assigned_at: string; restored_at: string }
+import type { RepairTicketRow } from "../database/types";
+
+/** 抢修工单领域模型：状态受 TicketStatus 状态机约束 */
+export type RepairTicket = RepairTicketRow;

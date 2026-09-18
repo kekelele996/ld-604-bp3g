@@ -1,1 +1,4 @@
-export interface GridAsset { id: number; asset_code: string; asset_type: string; feeder_line: string; voltage_level: string; location_desc: string; health_status: string; owner_team_id: number }
+import type { GridAssetRow } from "../database/types";
+
+/** 配网资产领域模型（与 grid_asset 表对齐） */
+export type GridAsset = GridAssetRow;

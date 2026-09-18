@@ -1,16 +1,21 @@
 import type { SparePartUsage } from "../types/SparePartUsage";
 
 export const createDefaultSparePartUsage = (overrides: Partial<SparePartUsage> = {}): SparePartUsage => ({
-  id: 1 as never,
-  ticket_id: 1 as never,
-  part_code: "part code 1" as never,
-  part_name: "part name 1" as never,
-  quantity: 92 as never,
-  warehouse_name: "warehouse name 1" as never,
-  approved_by: "approved by 1" as never,
-  usage_status: "ASSIGNED" as never,
+  id: 0,
+  ticket_id: 0,
+  part_code: "",
+  part_name: "",
+  quantity: 1,
+  warehouse_name: "",
+  usage_status: "PENDING",
+  approved_by: null,
+  approved_at: null,
+  created_at: "",
   ...overrides
 });
 
-export const createSparePartUsageForm = createDefaultSparePartUsage;
-export const createSparePartUsageResponse = createDefaultSparePartUsage;
+export const createSparePartUsageForm = (ticketId: number, partCode: string, quantity: number): SparePartUsage =>
+  createDefaultSparePartUsage({ ticket_id: ticketId, part_code: partCode, quantity });
+
+export const createSparePartUsageResponse = (row: Partial<SparePartUsage>): SparePartUsage =>
+  createDefaultSparePartUsage(row);

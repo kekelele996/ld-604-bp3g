@@ -1,1 +1,4 @@
-export interface FaultReport { id: number; reporter_name: string; phone: string; asset_id: number; fault_type: string; address_desc: string; severity: string; report_channel: string; status: string }
+import type { FaultReportRow } from "../database/types";
+
+/** 故障报修领域模型（与 fault_report 表对齐） */
+export type FaultReport = FaultReportRow;
