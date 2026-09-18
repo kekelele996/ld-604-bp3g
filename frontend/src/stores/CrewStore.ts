@@ -1,6 +1,26 @@
 import { defineStore } from "pinia";
-import { listCrew } from "../api/Crew";
+import { listCrew, setCrewDuty } from "../api/Crew";
+import type { Crew } from "../types/Crew";
+
 export const useCrewStore = defineStore("crew", {
-  state: () => ({ rows: [] as Awaited<ReturnType<typeof listCrew>>, loading: false }),
-  actions: { async load() { this.loading = true; this.rows = await listCrew(); this.loading = false; } }
+  state: () => ({ rows: [] as Crew[], loading: false }),
+  getters: {
+    onDutyCrews: (s) => s.rows.filter((c) => c.dutyStatus === "ON_DUTY"),
+    idleCrews: (s) => s.rows.filter((c) => c.available),
+  },
+  actions: {
+    async load(faultType?: string) {
+      this.loading = true;
+      try {
+        this.rows = await listCrew(faultType);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async toggleDuty(crew: Crew) {
+      const next = crew.dutyStatus === "ON_DUTY" ? "OFF_DUTY" : "ON_DUTY";
+      await setCrewDuty(crew.id, next);
+      await this.load();
+    },
+  },
 });

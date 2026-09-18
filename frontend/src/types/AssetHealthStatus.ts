@@ -1,3 +1,4 @@
-export const AssetHealthStatus = ["NORMAL","WATCH","DEGRADED","DANGEROUS"] as const;
-export type AssetHealthStatus = (typeof AssetHealthStatus)[number];
-export const AssetHealthStatusText: Record<AssetHealthStatus, string> = Object.fromEntries(AssetHealthStatus.map((value) => [value, value.replace(/_/g, " ")])) as Record<AssetHealthStatus, string>;
+export type { AssetHealthStatus } from "../constants/AssetHealthStatus";
+import type { AssetHealthStatus } from "../constants/AssetHealthStatus";
+/** 类型层枚举镜像（资产健康筛选/展示引用）。 */
+export type AssetHealthStatusValue = AssetHealthStatus;

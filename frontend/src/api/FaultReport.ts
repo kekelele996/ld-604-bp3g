@@ -1,21 +1,33 @@
-import { mockData } from "../mocks/seedData";
+import { get, post } from "./http";
 import type { FaultReport } from "../types/FaultReport";
+import type { FaultType } from "../constants/FaultType";
+import type { Severity } from "../constants/Severity";
 
-const endpoint = "/api/fault-report";
-
-export async function listFaultReport(): Promise<FaultReport[]> {
-  if (typeof fetch !== "undefined" && endpoint.startsWith("/api") && true) {
-    try {
-      const res = await fetch(endpoint);
-      if (res.ok) return await res.json();
-    } catch {
-      // Local mock fallback keeps the UI available during offline review.
-    }
-  }
-  return [...(mockData.faultReport as unknown as FaultReport[])];
+export interface FaultCreatePayload {
+  reporter_name: string;
+  phone: string;
+  asset_id?: number | null;
+  fault_type: FaultType | string;
+  address_desc?: string;
+  severity: Severity | string;
+  report_channel?: string;
 }
 
-export async function saveFaultReport(payload: FaultReport) {
-  console.info("save FaultReport", payload);
-  return payload;
+export function listFaultReport(params: { status?: string; severity?: string } = {}) {
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v) as [string, string][],
+  ).toString();
+  return get<FaultReport[]>(`/fault-report${qs ? `?${qs}` : ""}`);
+}
+
+export function createFaultReport(payload: FaultCreatePayload) {
+  return post<FaultReport>("/fault-report", payload);
+}
+
+export function mergeFaultReport(id: number, targetId: number) {
+  return post<{ sourceId: number; mergedInto: number }>(`/fault-report/${id}/merge`, { targetId });
+}
+
+export function createTicketFromFault(id: number) {
+  return post<{ faultId: number; ticketId: number }>(`/fault-report/${id}/create-ticket`, {});
 }

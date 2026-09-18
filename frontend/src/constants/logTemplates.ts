@@ -1,7 +1,29 @@
+/**
+ * 前端日志模板镜像：与后端 constants/logTemplates.ts 的 action 对齐。
+ * 前端仅用于操作前埋点/排障，真正落库由后端完成。
+ * 新增写操作时必须同步：后端模板、service、这里、调用处。
+ */
 export const LOG_TEMPLATES = {
-  GridAsset: ["配网资产创建", "配网资产更新", "配网资产状态变更", "配网资产导出"],
-  FaultReport: ["故障报修创建", "故障报修更新", "故障报修状态变更", "故障报修导出"],
-  RepairTicket: ["抢修工单创建", "抢修工单更新", "抢修工单状态变更", "抢修工单导出"],
-  Crew: ["抢修班组创建", "抢修班组更新", "抢修班组状态变更", "抢修班组导出"],
-  SparePartUsage: ["备件领用创建", "备件领用更新", "备件领用状态变更", "备件领用导出"]
-};
+  RepairTicket: {
+    dispatch: "RepairTicket.dispatch",
+    transition: "RepairTicket.transition",
+    restore: "RepairTicket.restore",
+    close: "RepairTicket.close",
+  },
+  FaultReport: {
+    create: "FaultReport.create",
+    merge: "FaultReport.merge",
+    createTicket: "FaultReport.createTicket",
+  },
+  Crew: {
+    duty: "Crew.duty",
+    occupy: "Crew.occupy",
+    release: "Crew.release",
+  },
+  SparePartUsage: {
+    apply: "SparePartUsage.apply",
+    approve: "SparePartUsage.approve",
+    reject: "SparePartUsage.reject",
+    return: "SparePartUsage.return",
+  },
+} as const;

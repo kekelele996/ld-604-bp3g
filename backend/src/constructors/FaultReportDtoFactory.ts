@@ -1,1 +1,27 @@
-export const createFaultReportDto = (overrides = {}) => ({ id: 1, reporter_name: "reporter name 1", phone: "13800000001", asset_id: 1, fault_type: "VOLTAGE_LOW", address_desc: "address desc 1", severity: "severity 1", report_channel: "report channel 1", status: "ASSIGNED", ...overrides });
+import type { FaultReportView } from "../repositories/FaultReportRepository";
+import { FAULT_TYPE_TEXT, SEVERITY_TEXT } from "../constants/statusText";
+
+export function toFaultReportDto(row: FaultReportView) {
+  return {
+    id: row.id,
+    reporterName: row.reporter_name,
+    phone: row.phone,
+    assetId: row.asset_id,
+    assetCode: row.asset_code,
+    assetType: row.asset_type,
+    faultType: row.fault_type,
+    faultTypeText: FAULT_TYPE_TEXT[row.fault_type] ?? row.fault_type,
+    addressDesc: row.address_desc,
+    severity: row.severity,
+    severityText: SEVERITY_TEXT[row.severity as keyof typeof SEVERITY_TEXT] ?? row.severity,
+    reportChannel: row.report_channel,
+    status: row.status,
+    mergedIntoId: row.merged_into_id,
+    ticketId: row.ticket_id,
+    createdAt: row.created_at,
+  };
+}
+
+export function toFaultReportListDto(rows: FaultReportView[]) {
+  return rows.map(toFaultReportDto);
+}

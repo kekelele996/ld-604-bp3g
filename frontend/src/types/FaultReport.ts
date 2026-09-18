@@ -1,11 +1,21 @@
+import type { FaultType } from "../constants/FaultType";
+import type { Severity } from "../constants/Severity";
+
 export interface FaultReport {
   id: number;
-  reporter_name: string;
+  reporterName: string;
   phone: string;
-  asset_id: number;
-  fault_type: string;
-  address_desc: string;
-  severity: string;
-  report_channel: string;
-  status: string;
+  assetId: number | null;
+  assetCode: string | null;
+  assetType: string | null;
+  faultType: FaultType | string;
+  faultTypeText: string;
+  addressDesc: string | null;
+  severity: Severity | string;
+  severityText: string;
+  reportChannel: string;
+  status: "WAIT_DISPATCH" | "TICKET_CREATED" | "DUPLICATED" | string;
+  mergedIntoId: number | null;
+  ticketId: number | null;
+  createdAt?: string;
 }

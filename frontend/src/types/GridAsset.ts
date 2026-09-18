@@ -1,10 +1,15 @@
+import type { AssetHealthStatus } from "../constants/AssetHealthStatus";
+
 export interface GridAsset {
   id: number;
-  asset_code: string;
-  asset_type: string;
-  feeder_line: string;
-  voltage_level: string;
-  location_desc: string;
-  health_status: string;
-  owner_team_id: number;
+  assetCode: string;
+  assetType: string;
+  feederLine: string;
+  voltageLevel: string;
+  locationDesc: string | null;
+  healthStatus: AssetHealthStatus | string;
+  healthStatusText: string;
+  ownerTeamId: number | null;
+  faultCount: number;
+  openFaultCount: number;
 }

@@ -1,21 +1,21 @@
-import { mockData } from "../mocks/seedData";
+import { get, post, patch } from "./http";
 import type { GridAsset } from "../types/GridAsset";
 
-const endpoint = "/api/grid-asset";
-
-export async function listGridAsset(): Promise<GridAsset[]> {
-  if (typeof fetch !== "undefined" && endpoint.startsWith("/api") && true) {
-    try {
-      const res = await fetch(endpoint);
-      if (res.ok) return await res.json();
-    } catch {
-      // Local mock fallback keeps the UI available during offline review.
-    }
-  }
-  return [...(mockData.gridAsset as unknown as GridAsset[])];
+export function listGridAsset(params: { feederLine?: string; healthStatus?: string } = {}) {
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v) as [string, string][],
+  ).toString();
+  return get<GridAsset[]>(`/grid-asset${qs ? `?${qs}` : ""}`);
 }
 
-export async function saveGridAsset(payload: GridAsset) {
-  console.info("save GridAsset", payload);
-  return payload;
+export function listFeederLines() {
+  return get<string[]>("/grid-asset/feeder-lines");
+}
+
+export function createGridAsset(payload: Record<string, unknown>) {
+  return post<GridAsset>("/grid-asset", payload);
+}
+
+export function updateAssetHealth(id: number, health_status: string) {
+  return patch<GridAsset>(`/grid-asset/${id}/health`, { health_status });
 }

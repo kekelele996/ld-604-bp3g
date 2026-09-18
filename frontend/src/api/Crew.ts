@@ -1,21 +1,15 @@
-import { mockData } from "../mocks/seedData";
+import { get, post, patch } from "./http";
 import type { Crew } from "../types/Crew";
 
-const endpoint = "/api/crew";
-
-export async function listCrew(): Promise<Crew[]> {
-  if (typeof fetch !== "undefined" && endpoint.startsWith("/api") && true) {
-    try {
-      const res = await fetch(endpoint);
-      if (res.ok) return await res.json();
-    } catch {
-      // Local mock fallback keeps the UI available during offline review.
-    }
-  }
-  return [...(mockData.crew as unknown as Crew[])];
+export function listCrew(faultType?: string) {
+  const qs = faultType ? `?faultType=${encodeURIComponent(faultType)}` : "";
+  return get<Crew[]>(`/crew${qs}`);
 }
 
-export async function saveCrew(payload: Crew) {
-  console.info("save Crew", payload);
-  return payload;
+export function createCrew(payload: { name: string; skill_tags: string; duty_status: string; contact_phone?: string }) {
+  return post<Crew>("/crew", payload);
+}
+
+export function setCrewDuty(id: number, duty_status: "ON_DUTY" | "OFF_DUTY") {
+  return patch<{ id: number; duty_status: string }>(`/crew/${id}/duty`, { duty_status });
 }

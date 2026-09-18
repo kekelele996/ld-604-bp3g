@@ -1,26 +1,48 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { routes } from "./router/routes";
-import { mockData } from "./mocks/seedData";
-import StatusBadge from "./components/common/StatusBadge.vue";
-import StatCard from "./components/common/StatCard.vue";
-const active = ref<string>(routes[0]?.route ?? "/dashboard");
-const current = computed(() => routes.find((route) => route.route === active.value) ?? routes[0]);
-const entries = Object.entries(mockData);
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { navItems } from "./router";
+import { useAuthStore } from "./stores/authStore";
+import { ROLE_LABEL } from "./constants/Role";
+
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const currentTitle = computed(() => (route.meta.title as string) ?? "电力配网抢修");
+
+function logout() {
+  authStore.clear();
+  router.push("/login");
+}
 </script>
 
 <template>
-  <div class="shell">
-    <aside>
-      <div class="brand">电力配网抢修工单系统</div>
-      <nav>
-        <button v-for="route in routes" :key="route.route" :class="{ active: active === route.route }" @click="active = route.route">{{ route.name }}</button>
+  <router-view v-if="route.meta.public" />
+  <div v-else class="shell">
+    <aside class="sidebar">
+      <div class="brand">⚡ 配网抢修</div>
+      <nav class="nav">
+        <RouterLink v-for="item in navItems" :key="item.route" :to="item.route" class="nav-link" active-class="active">
+          {{ item.name }}
+        </RouterLink>
       </nav>
+      <div class="sidebar-foot">
+        <div class="user-box">
+          <strong>{{ authStore.user?.displayName ?? "未登录" }}</strong>
+          <span>{{ ROLE_LABEL[authStore.role] ?? authStore.role }}</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" @click="logout">退出登录</button>
+      </div>
     </aside>
     <main class="page">
-      <section class="page-head"><div><p class="eyebrow">grid-repair</p><h1>{{ current?.name }}</h1></div><StatusBadge value="LOCAL_DATA" /></section>
-      <section class="metrics"><StatCard label="核心模型" :value="entries.length" /><StatCard label="共享枚举" :value="3" /><StatCard label="本地记录" :value="entries.reduce((s, [, rows]) => s + rows.length, 0)" /></section>
-      <section class="workbench"><div class="panel wide"><h2>业务数据</h2><article class="row" v-for="[key, rows] in entries" :key="key"><strong>{{ key }}</strong><span>{{ rows.length }} 条</span><StatusBadge value="READY" /></article></div><div class="panel"><h2>联动检查</h2><p>页面、store、API、构造器、日志模板和枚举常量均按提示词拆分。</p></div></section>
+      <header class="page-head">
+        <h1>{{ currentTitle }}</h1>
+      </header>
+      <RouterView v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </main>
   </div>
 </template>

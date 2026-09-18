@@ -1,1 +1,4 @@
-<template><div class="empty">暂无数据</div></template>
+<template><div class="empty-state"><span class="empty-icon">📭</span><p>{{ text }}</p><slot /></div></template>
+<script setup lang="ts">
+defineProps<{ text?: string }>();
+</script>

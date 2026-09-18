@@ -1,9 +1,14 @@
 export interface Crew {
   id: number;
   name: string;
-  leader_id: number;
-  skill_tags: string;
-  duty_status: string;
-  current_ticket_id: number;
-  contact_phone: string;
+  leaderId: number | null;
+  skillTags: string;
+  skillList: string[];
+  dutyStatus: "ON_DUTY" | "OFF_DUTY" | string;
+  dutyStatusText: string;
+  currentTicketId: number | null;
+  contactPhone: string | null;
+  idle: boolean;
+  available: boolean;
+  busyReason?: string | null;
 }
